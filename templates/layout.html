@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICH IT Helpdesk</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #0F172A; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+    
+    {% if current_user.is_authenticated %}
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <a href="{{ url_for('dashboard') }}" class="flex items-center gap-3">
+                        <img src="{{ url_for('static', filename='logo.png') }}" alt="ICH Logo" class="h-8 w-auto object-contain">
+                        <span class="font-bold text-xl tracking-tight text-gray-900">ICH Ticketing System</span>
+                    </a>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="hidden md:flex items-center gap-6 mr-6 border-r border-gray-100 pr-6">
+                        {% if current_user.role == 'ADMIN' %}
+                        <a href="{{ url_for('admin_tickets') }}" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-2">
+                            <i data-lucide="inbox" class="w-4 h-4"></i> All Tickets
+                        </a>
+                        <a href="{{ url_for('admin_users') }}" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-2">
+                            <i data-lucide="users" class="w-4 h-4"></i> Users
+                        </a>
+                        <a href="{{ url_for('admin_offices') }}" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-2">
+                            <i data-lucide="building-2" class="w-4 h-4"></i> Offices
+                        </a>
+                        <a href="{{ url_for('admin_report') }}" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-2">
+                            <i data-lucide="bar-chart" class="w-4 h-4"></i> Report
+                        </a>
+                        {% endif %}
+                    </div>
+                    <div class="text-right hidden sm:block border-r border-gray-100 pr-6">
+                        <p class="text-sm font-semibold text-gray-900">{{ current_user.displayName }}</p>
+                        <p class="text-xs text-blue-600 uppercase tracking-wider font-semibold">{{ current_user.role.replace('_', ' ') }}</p>
+                    </div>
+                    <a href="{{ url_for('logout') }}" class="text-gray-500 hover:text-red-600 transition-colors bg-gray-50 hover:bg-red-50 p-2 rounded-xl">
+                        <i data-lucide="log-out" class="h-5 w-5"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-6 p-4 rounded-xl border {% if category == 'success' %}bg-green-50 border-green-200 text-green-700{% else %}bg-red-50 border-red-200 text-red-700{% endif %} flex justify-between items-center transition-all duration-300">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="info" class="h-5 w-5 opacity-70"></i>
+                            <span class="font-medium text-sm">{{ message }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-gray-500 font-medium">
+            &copy; 2026 ICH Internal Ticketing System. All rights reserved.
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        lucide.createIcons();
+        $(document).ready(function() {
+            $('.datatable').DataTable({
+                "pageLength": 10,
+                "ordering": true,
+                "info": true,
+                "searching": true,
+                "lengthChange": true
+            });
+        });
+    </script>
+</body>
+</html>

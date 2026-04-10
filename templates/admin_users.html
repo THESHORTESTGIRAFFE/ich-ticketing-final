@@ -1,0 +1,214 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+            <a href="{{ url_for('dashboard') }}" class="p-2 bg-white rounded-xl shadow-sm border border-gray-100 text-gray-500 hover:text-blue-600 transition-colors">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </a>
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-gray-900">User Management</h1>
+                <p class="text-sm text-gray-500 mt-0.5">{{ users|length }} total users</p>
+            </div>
+        </div>
+        <!-- Add User button -->
+        <button onclick="document.getElementById('modal-add').classList.remove('hidden')"
+                class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 transition-colors shadow-sm">
+            <i data-lucide="user-plus" class="w-4 h-4"></i> Add User
+        </button>
+    </div>
+
+    <!-- Users Table -->
+    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-gray-100 bg-gray-50/50">
+            <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <i data-lucide="users" class="w-5 h-5 text-blue-600"></i> All System Users
+            </h2>
+        </div>
+        <div class="overflow-x-auto px-4 pb-6 pt-4">
+            <table class="w-full text-left border-collapse datatable text-sm">
+                <thead>
+                    <tr class="text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50 border-b border-gray-100">
+                        <th class="px-4 py-4">Name</th>
+                        <th class="px-4 py-4">Email</th>
+                        <th class="px-4 py-4">Office</th>
+                        <th class="px-4 py-4">Role</th>
+                        <th class="px-4 py-4">Status</th>
+                        <th class="px-4 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for user in users %}
+                    <tr class="hover:bg-gray-50/80 transition-colors {% if not user.is_active %}opacity-50{% endif %}">
+                        <td class="px-4 py-3 font-semibold text-gray-900">{{ user.displayName }}</td>
+                        <td class="px-4 py-3 text-gray-500 text-xs font-mono">{{ user.email }}</td>
+                        <td class="px-4 py-3 text-gray-600 text-sm">{{ user.office.name if user.office else '—' }}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                {{ user.role.replace('_', ' ') }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            {% if not user.is_active %}
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">DEACTIVATED</span>
+                            {% elif user.is_suspended %}
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-yellow-50 text-yellow-700 border border-yellow-200">SUSPENDED</span>
+                            {% else %}
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-200">ACTIVE</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                            {% if current_user.id != user.id %}
+                            <div class="flex justify-end items-center gap-1.5 flex-wrap">
+                                <!-- Role -->
+                                <form method="POST" class="flex gap-1.5">
+                                    <input type="hidden" name="action" value="update_role">
+                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                    <select name="role" class="text-xs bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-2 font-medium text-gray-700 outline-none focus:border-blue-500">
+                                        {% for r in ['STAFF','INTERN','TECHNICIAN','ICT_OFFICER','ADMIN'] %}
+                                        <option value="{{ r }}" {% if user.role == r %}selected{% endif %}>{{ r.replace('_',' ') }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg px-2.5 py-1.5 font-bold text-xs transition-colors">Set</button>
+                                </form>
+
+                                <!-- Reset Password -->
+                                <button onclick="openReset('{{ user.id }}','{{ user.displayName }}')"
+                                        class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg px-2.5 py-1.5 text-xs font-bold transition-colors">
+                                    <i data-lucide="key" class="w-3 h-3 inline -mt-0.5"></i> Reset PW
+                                </button>
+
+                                <!-- Suspend / Unsuspend -->
+                                {% if user.is_suspended %}
+                                <form method="POST">
+                                    <input type="hidden" name="action" value="unsuspend">
+                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                    <button type="submit" class="bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border border-yellow-200 rounded-lg px-2.5 py-1.5 text-xs font-bold transition-colors">Unsuspend</button>
+                                </form>
+                                {% else %}
+                                <form method="POST">
+                                    <input type="hidden" name="action" value="suspend">
+                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                    <button type="submit" class="bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border border-yellow-200 rounded-lg px-2.5 py-1.5 text-xs font-bold transition-colors">Suspend</button>
+                                </form>
+                                {% endif %}
+
+                                <!-- Deactivate / Activate -->
+                                {% if user.is_active %}
+                                <form method="POST" onsubmit="return confirm('Deactivate {{ user.displayName }}? They will not be able to log in.')">
+                                    <input type="hidden" name="action" value="deactivate">
+                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                    <button type="submit" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg px-2.5 py-1.5 text-xs font-bold transition-colors">Deactivate</button>
+                                </form>
+                                {% else %}
+                                <form method="POST">
+                                    <input type="hidden" name="action" value="activate">
+                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                    <button type="submit" class="bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 rounded-lg px-2.5 py-1.5 text-xs font-bold transition-colors">Re-activate</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                                <span class="text-xs text-gray-400">You</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- =================== MODAL: Add User =================== -->
+<div id="modal-add" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-gray-900">Add New User</h2>
+            <button onclick="document.getElementById('modal-add').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <form method="POST" class="space-y-4">
+            <input type="hidden" name="action" value="add_user">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Full Name</label>
+                <input type="text" name="new_name" required placeholder="Jane Doe"
+                       class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Email</label>
+                <input type="email" name="new_email" required placeholder="jane@example.com"
+                       class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Role</label>
+                    <select name="new_role" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                        {% for r in ['STAFF','INTERN','TECHNICIAN','ICT_OFFICER','ADMIN'] %}
+                        <option value="{{ r }}">{{ r.replace('_',' ') }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Office</label>
+                    <select name="new_office_id" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">— None —</option>
+                        {% for o in offices %}
+                        <option value="{{ o.id }}">{{ o.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Initial Password</label>
+                <input type="password" name="new_password" required placeholder="Min 6 characters"
+                       class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="document.getElementById('modal-add').classList.add('hidden')"
+                        class="flex-1 border border-gray-200 text-gray-700 font-bold py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm">Cancel</button>
+                <button type="submit"
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition-colors text-sm">Create User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- =================== MODAL: Reset Password =================== -->
+<div id="modal-reset" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-gray-900">Reset Password</h2>
+            <button onclick="document.getElementById('modal-reset').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <p class="text-sm text-gray-500 mb-5">Setting new password for <strong id="reset-name" class="text-gray-800"></strong>.</p>
+        <form method="POST" class="space-y-4">
+            <input type="hidden" name="action" value="reset_password">
+            <input type="hidden" name="user_id" id="reset-user-id">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">New Password</label>
+                <input type="password" name="new_password" required placeholder="Min 6 characters"
+                       class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="document.getElementById('modal-reset').classList.add('hidden')"
+                        class="flex-1 border border-gray-200 text-gray-700 font-bold py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-sm">Cancel</button>
+                <button type="submit"
+                        class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl transition-colors text-sm">Reset</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openReset(userId, userName) {
+    document.getElementById('reset-user-id').value = userId;
+    document.getElementById('reset-name').textContent = userName;
+    document.getElementById('modal-reset').classList.remove('hidden');
+}
+</script>
+{% endblock %}

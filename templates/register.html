@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-10">
+    <div class="bg-white p-8 rounded-3xl shadow-xl shadow-blue-900/5 border border-gray-100">
+        <div class="text-center mb-8">
+            <img src="{{ url_for('static', filename='logo_banner.png') }}" alt="ICH Logo Banner" class="h-14 w-auto object-contain mx-auto mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 font-sans tracking-tight">Create Account</h2>
+            <p class="text-sm text-gray-500 mt-2 font-medium">Register to submit support tickets</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('register') }}" class="space-y-5">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
+                <input type="text" name="displayName" required 
+                       class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm font-medium"
+                       placeholder="John Doe">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+                <input type="email" name="email" required 
+                       class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm font-medium"
+                       placeholder="john@example.com">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Department / Office</label>
+                <select name="officeId" required
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm font-medium text-gray-700">
+                    <option value="" disabled selected>Select your office</option>
+                    {% for office in offices %}
+                    <option value="{{ office.id }}">{{ office.name }}</option>
+                    {% endfor %}
+                </select>
+                <p class="text-xs text-gray-400 mt-1">If your office is not listed, contact the administrator.</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Password</label>
+                <input type="password" name="password" required 
+                       class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm font-medium"
+                       placeholder="••••••••">
+            </div>
+
+            <button type="submit" class="w-full py-3 px-4 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 mt-4">
+                Register
+            </button>
+        </form>
+
+        <p class="mt-6 text-center text-sm font-medium text-gray-500">
+            Already have an account? 
+            <a href="{{ url_for('login') }}" class="text-blue-600 hover:text-blue-700 hover:underline">Sign in</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

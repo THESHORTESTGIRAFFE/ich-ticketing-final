@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-end mb-8">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-gray-900">ICT Operations</h1>
+            <p class="text-gray-500 font-medium">Manage assignments and unassigned tickets</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-orange-100 shadow-sm shadow-orange-50 overflow-hidden mt-8">
+        <div class="p-6 border-b border-orange-50 flex justify-between items-center bg-orange-50/30">
+            <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <i data-lucide="alert-circle" class="w-5 h-5 text-orange-500"></i> Unassigned Tickets
+            </h2>
+        </div>
+        <div class="overflow-x-auto px-6 pb-6 pt-4">
+            <table class="w-full text-left border-collapse datatable text-sm">
+                <thead>
+                    <tr class="text-xs font-semibold text-gray-500 uppercase tracking-wider bg-white border-b border-gray-100">
+                        <th class="px-6 py-4">Ticket</th>
+                        <th class="px-6 py-4">Office & Requester</th>
+                        <th class="px-6 py-4">Priority</th>
+                        <th class="px-6 py-4 text-right">Quick Assign</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for ticket in tickets %}
+                    <tr class="hover:bg-gray-50/80 transition-colors">
+                        <td class="px-6 py-4">
+                            <span class="block font-semibold text-gray-900">{{ ticket.title }}</span>
+                            <span class="block text-xs font-mono text-gray-400 mt-1">#{{ ticket.id|upper }}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="block text-sm font-medium text-gray-900">{{ ticket.office.name }}</span>
+                            <span class="block text-xs text-gray-500">{{ ticket.creator.displayName }}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if ticket.priority == 'HIGH' %}
+                                <span class="text-xs font-bold text-red-600">HIGH</span>
+                            {% else %}
+                                <span class="text-xs font-bold text-gray-500">{{ ticket.priority }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right min-w-[200px]">
+                            <form method="POST" action="{{ url_for('ticket_action', ticket_id=ticket.id) }}" class="flex items-center justify-end gap-2">
+                                <input type="hidden" name="action_type" value="assign">
+                                <select name="technician_id" required class="text-sm bg-gray-50 border border-gray-200 rounded-lg py-1.5 px-3 font-medium text-gray-700 outline-none focus:border-blue-500">
+                                    <option value="" disabled selected>Select Tech</option>
+                                    {% for tech in technicians %}
+                                    <option value="{{ tech.id }}">{{ tech.displayName }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-1.5 transition-colors">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                </button>
+                                <a href="{{ url_for('view_ticket', ticket_id=ticket.id) }}" class="text-gray-400 hover:text-blue-600 p-1.5">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                </a>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-gray-500 font-medium">All tickets are assigned.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

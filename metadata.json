@@ -1,0 +1,5 @@
+{
+  "name": "IT Helpdesk Ticketing System",
+  "description": "A role-based internal IT ticketing system for organizations, featuring office-based tracking, technician assignment, and comprehensive dashboards.",
+  "requestFramePermissions": []
+}
