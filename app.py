@@ -7,30 +7,49 @@ from datetime import datetime, timedelta, timezone
 import string
 import random
 from sqlalchemy import func
+import logging
+from logging.handlers import RotatingFileHandler
+from dotenv import load_dotenv
+from flask_migrate import Migrate
 from models import db, User, Office, Ticket, Comment, ActivityLog
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 
 # ── Security config ──────────────────────────────────────────────────────────
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change-me-before-production-ICH2026!')
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)  # auto-logout after 8h idle
-app.config['SESSION_COOKIE_HTTPONLY'] = True   # JS cannot read session cookie
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF mitigation
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-must-be-changed-in-prod')
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=int(os.environ.get('PERMANENT_SESSION_LIFETIME', 28800)))
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # ── Database ─────────────────────────────────────────────────────────────────
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-    'DATABASE_URL',
-    f'sqlite:///ich_ticketing.db'
-)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///ich_ticketing.db')
 
 db.init_app(app)
+migrate = Migrate(app, db)
 
 login_manager = LoginManager()
 login_manager.login_view = 'login'
 login_manager.login_message = 'Please log in to access this page.'
 login_manager.login_message_category = 'warning'
 login_manager.init_app(app)
+
+# ── Logging Setup ─────────────────────────────────────────────────────────────
+if not app.debug:
+    if not os.path.exists('logs'):
+        os.mkdir('logs')
+    file_handler = RotatingFileHandler('logs/ich_ticketing.log', maxBytes=10240, backupCount=10)
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    ))
+    file_handler.setLevel(logging.INFO)
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(logging.INFO)
+    app.logger.info('ICH Ticketing startup')
 
 # ── Security headers on every response ───────────────────────────────────────
 @app.after_request
@@ -207,18 +226,71 @@ def dashboard():
         return render_template('dashboards/admin.html', stats=stats, chart_data=chart_data)
         
     elif current_user.role == 'ICT_OFFICER':
-        unassigned = Ticket.query.filter_by(assignedTo=None).all()
+        unassigned = Ticket.query.filter_by(assignedTo=None).order_by(Ticket.createdAt.desc()).all()
         technicians = User.query.filter(User.role.in_(['TECHNICIAN', 'INTERN'])).all()
         return render_template('dashboards/ict.html', tickets=unassigned, technicians=technicians)
         
     elif current_user.role in ['TECHNICIAN', 'INTERN']:
-        assigned_tickets = Ticket.query.filter_by(assignedTo=current_user.id).all()
-        open_tickets = Ticket.query.filter_by(status='OPEN').all() if current_user.role == 'INTERN' else []
-        return render_template('dashboards/technician.html', assigned=assigned_tickets, open_tickets=open_tickets)
+        assigned_query = Ticket.query.filter_by(assignedTo=current_user.id)
+        
+        # Stats specifically for this technician
+        stats = {
+            'total': assigned_query.count(),
+            'open': assigned_query.filter_by(status='OPEN').count(),
+            'in_progress': assigned_query.filter_by(status='IN_PROGRESS').count(),
+            'resolved': assigned_query.filter_by(status='RESOLVED').count()
+        }
+        
+        # Chart Data for technician
+        status_counts = dict(db.session.query(Ticket.status, func.count(Ticket.id)).filter(Ticket.assignedTo == current_user.id).group_by(Ticket.status).all())
+        priority_counts = dict(db.session.query(Ticket.priority, func.count(Ticket.id)).filter(Ticket.assignedTo == current_user.id).group_by(Ticket.priority).all())
+        
+        # 7-day trend for assigned tickets
+        seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+        recent_tickets = assigned_query.filter(Ticket.createdAt >= seven_days_ago).all()
+        dates_dict = {}
+        for i in range(7):
+            day = (datetime.now(timezone.utc) - timedelta(days=i)).strftime('%b %d')
+            dates_dict[day] = 0
+            
+        for t in recent_tickets:
+            day_str = t.createdAt.strftime('%b %d')
+            if day_str in dates_dict:
+                dates_dict[day_str] += 1
+                
+        trend_keys = list(dates_dict.keys())[::-1]
+        trend_values = [dates_dict[k] for k in trend_keys]
+        
+        chart_data = {
+            'status': status_counts,
+            'priority': priority_counts,
+            'trend_labels': trend_keys,
+            'trend_data': trend_values
+        }
+
+        return render_template('dashboards/technician.html', 
+                               stats=stats,
+                               chart_data=chart_data)
         
     else: # STAFF
-        my_tickets = Ticket.query.filter_by(createdBy=current_user.id).all()
+        my_tickets = Ticket.query.filter_by(createdBy=current_user.id).order_by(Ticket.createdAt.desc()).all()
         return render_template('dashboards/staff.html', tickets=my_tickets)
+
+@app.route('/my-tasks')
+@login_required
+def my_tasks():
+    if current_user.role not in ['TECHNICIAN', 'INTERN']:
+        abort(403)
+    assigned_tickets = Ticket.query.filter_by(assignedTo=current_user.id).order_by(Ticket.createdAt.desc()).all()
+    return render_template('my_tasks.html', tickets=assigned_tickets)
+
+@app.route('/open-pool')
+@login_required
+def open_pool():
+    if current_user.role not in ['TECHNICIAN', 'INTERN']:
+        abort(403)
+    open_tickets = Ticket.query.filter_by(status='OPEN', assignedTo=None).order_by(Ticket.createdAt.desc()).all()
+    return render_template('open_pool.html', tickets=open_tickets)
 
 @app.route('/ticket/new', methods=['GET', 'POST'])
 @login_required
@@ -316,12 +388,23 @@ def ticket_action(ticket_id):
         db.session.add(ActivityLog(ticketId=ticket_id, userId=current_user.id, action=f'Status changed to {new_status}'))
         db.session.commit()
         
-    elif action_type == 'assign' and current_user.role in ['ADMIN', 'ICT_OFFICER']:
-        tech_id = request.form.get('technician_id')
-        ticket.assignedTo = tech_id
-        ticket.status = 'IN_PROGRESS'
-        db.session.add(ActivityLog(ticketId=ticket_id, userId=current_user.id, action='Assigned Ticket'))
-        db.session.commit()
+    elif action_type == 'assign':
+        if current_user.role in ['ADMIN', 'ICT_OFFICER']:
+            tech_id = request.form.get('technician_id')
+        elif current_user.role in ['TECHNICIAN', 'INTERN']:
+            # Technical staff can ONLY assign to themselves
+            tech_id = current_user.id
+        else:
+            abort(403)
+
+        if tech_id:
+            ticket.assignedTo = tech_id
+            ticket.status = 'IN_PROGRESS'
+            db.session.add(ActivityLog(ticketId=ticket_id, userId=current_user.id, action='Assigned Ticket', details=f"Assigned to {User.query.get(tech_id).displayName}"))
+            db.session.commit()
+            flash('Ticket assigned successfully.', 'success')
+        else:
+            flash('No technician selected.', 'danger')
 
     return redirect(url_for('view_ticket', ticket_id=ticket_id))
 
@@ -495,10 +578,28 @@ def admin_report():
                            today=datetime.now(timezone.utc).strftime('%Y-%m-%d'),
                            min_date=(datetime.now(timezone.utc) - timedelta(days=365)).strftime('%Y-%m-%d'))
 
+# ── Error Handlers ───────────────────────────────────────────────────────────
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('errors/404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    return render_template('errors/500.html'), 500
+
+@app.errorhandler(403)
+def forbidden_error(error):
+    return render_template('errors/403.html'), 403
+
 def create_db_and_seed():
     with app.app_context():
-        db.create_all()
+        # In production, use migrations instead of db.create_all()
+        if os.getenv('FLASK_ENV') != 'production':
+            db.create_all()
+            
         if Office.query.count() == 0:
+            print("Seeding initial offices...")
             offices = [
                 {'name': 'Accounts'},
                 {'name': 'HR'},

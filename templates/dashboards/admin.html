@@ -8,32 +8,32 @@
             <p class="text-gray-500 font-medium">System-wide overview and analytics</p>
         </div>
         <a href="{{ url_for('new_ticket') }}" class="py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow shadow-blue-200 transition-all flex items-center gap-2 text-sm">
-            <i data-lucide="plus" class="w-4 h-4"></i> New Ticket
+            <i class="hgi-stroke hgi-plus-naught w-4 h-4"></i> New Ticket
         </a>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center">
             <div class="flex items-center gap-3 text-gray-500 mb-2 font-medium">
-                <i data-lucide="ticket" class="w-5 h-5 text-gray-400"></i> Total Tickets
+                <i class="hgi-stroke hgi-ticket-01 w-5 h-5 text-gray-400"></i> Total Tickets
             </div>
             <div class="text-4xl font-extrabold text-gray-900">{{ stats.total }}</div>
         </div>
         <div class="bg-white p-6 rounded-3xl border border-blue-100 shadow-sm shadow-blue-50 flex flex-col justify-center">
             <div class="flex items-center gap-3 text-blue-600 mb-2 font-medium">
-                <i data-lucide="folder-open" class="w-5 h-5 opacity-80"></i> Open
+                <i class="hgi-stroke hgi-folder-open w-5 h-5 opacity-80"></i> Open
             </div>
             <div class="text-4xl font-extrabold text-gray-900">{{ stats.open }}</div>
         </div>
         <div class="bg-white p-6 rounded-3xl border border-orange-100 shadow-sm shadow-orange-50 flex flex-col justify-center">
             <div class="flex items-center gap-3 text-orange-600 mb-2 font-medium">
-                <i data-lucide="loader" class="w-5 h-5 opacity-80"></i> In Progress
+                <i class="hgi-stroke hgi-loading-01 w-5 h-5 opacity-80"></i> In Progress
             </div>
             <div class="text-4xl font-extrabold text-gray-900">{{ stats.in_progress }}</div>
         </div>
         <div class="bg-white p-6 rounded-3xl border border-green-100 shadow-sm shadow-green-50 flex flex-col justify-center">
             <div class="flex items-center gap-3 text-green-600 mb-2 font-medium">
-                <i data-lucide="check-circle" class="w-5 h-5 opacity-80"></i> Resolved
+                <i class="hgi-stroke hgi-tick-02 w-5 h-5 opacity-80"></i> Resolved
             </div>
             <div class="text-4xl font-extrabold text-gray-900">{{ stats.resolved }}</div>
         </div>
@@ -42,7 +42,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         <!-- Chart 1 -->
         <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-            <h3 class="text-sm font-bold text-gray-900 mb-6 flex items-center gap-2"><i data-lucide="pie-chart" class="w-5 h-5 text-blue-600"></i> Tickets by Status</h3>
+            <h3 class="text-sm font-bold text-gray-900 mb-6 flex items-center gap-2"><i class="hgi-stroke hgi-pie-chart w-5 h-5 text-blue-600"></i> Tickets by Status</h3>
             <div class="relative h-64 w-full flex justify-center">
                 <canvas id="statusChart"></canvas>
             </div>
@@ -50,7 +50,7 @@
 
         <!-- Chart 2 -->
         <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-            <h3 class="text-sm font-bold text-gray-900 mb-6 flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-5 h-5 text-orange-600"></i> Priority Distribution</h3>
+            <h3 class="text-sm font-bold text-gray-900 mb-6 flex items-center gap-2"><i class="hgi-stroke hgi-bar-chart-02 w-5 h-5 text-orange-600"></i> Priority Distribution</h3>
             <div class="relative h-64 w-full">
                 <canvas id="priorityChart"></canvas>
             </div>
@@ -58,7 +58,7 @@
 
         <!-- Chart 3 -->
         <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-            <h3 class="text-sm font-bold text-gray-900 mb-6 flex items-center gap-2"><i data-lucide="building-2" class="w-5 h-5 text-green-600"></i> Tickets by Office</h3>
+            <h3 class="text-sm font-bold text-gray-900 mb-6 flex items-center gap-2"><i class="hgi-stroke hgi-building-03 w-5 h-5 text-green-600"></i> Tickets by Office</h3>
             <div class="relative h-64 w-full">
                 <canvas id="officeChart"></canvas>
             </div>
@@ -66,7 +66,7 @@
 
         <!-- Chart 4 -->
         <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-            <h3 class="text-sm font-bold text-gray-900 mb-6 flex items-center gap-2"><i data-lucide="trending-up" class="w-5 h-5 text-purple-600"></i> 7-Day Ticket Volume</h3>
+            <h3 class="text-sm font-bold text-gray-900 mb-6 flex items-center gap-2"><i class="hgi-stroke hgi-chart-line-up w-5 h-5 text-purple-600"></i> 7-Day Ticket Volume</h3>
             <div class="relative h-64 w-full">
                 <canvas id="trendChart"></canvas>
             </div>

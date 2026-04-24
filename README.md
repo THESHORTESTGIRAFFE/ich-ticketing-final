@@ -24,11 +24,14 @@ source venv/bin/activate
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. (Optional) Set environment variables for MySQL
-export SECRET_KEY="your-secret-key-here"
-export DATABASE_URL="mysql+pymysql://user:pass@localhost/ich_ticketing"
+# 3. Setup environment variables
+cp .env.example .env
+# Edit .env with your secrets
 
-# 4. Run the application (auto-creates DB and seeds default data)
+# 4. Initialize database migrations
+flask db upgrade
+
+# 5. Run the application
 python app.py
 ```
 
@@ -52,9 +55,9 @@ The app will be available at `http://localhost:5000`
 
 ## Tech Stack
 
-- **Backend**: Python 3, Flask, Flask-Login, SQLAlchemy
-- **Database**: SQLite (dev) / MySQL (production)
-- **Frontend**: Jinja2 templates, Tailwind CSS (CDN), Chart.js, DataTables.js
+- **Backend**: Python 3, Flask, Flask-Login, SQLAlchemy, Flask-Migrate
+- **Database**: SQLite / PostgreSQL / MySQL
+- **Frontend**: Jinja2, Tailwind CSS (CDN), Chart.js, Hugeicons
 - **Auth**: Werkzeug password hashing (scrypt)
 
 ## Project Structure
@@ -88,9 +91,11 @@ The app will be available at `http://localhost:5000`
 # Generate a secure secret key
 python -c "import secrets; print(secrets.token_hex(32))"
 
+# Setup production database
+flask db upgrade
+
 # Run with gunicorn
-pip install gunicorn
-gunicorn -w 4 -b 0.0.0.0:5000 app:app
+gunicorn -c gunicorn_config.py app:app
 ```
 
 See [docs/SECURITY.md](docs/SECURITY.md) for the full security checklist.

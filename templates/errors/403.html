@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center py-20">
+    <div class="bg-white p-12 rounded-3xl shadow-xl text-center max-w-md w-full border border-gray-100">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-orange-50 text-orange-600 rounded-2xl mb-6">
+            <i class="hgi-stroke hgi-shield-warning w-10 h-10"></i>
+        </div>
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-2">403</h1>
+        <h2 class="text-xl font-bold text-gray-700 mb-4">Access Denied</h2>
+        <p class="text-gray-500 mb-8 font-medium">
+            You do not have permission to access this resource.
+        </p>
+        <a href="{{ url_for('dashboard') }}" class="inline-flex items-center justify-center px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-200 gap-2">
+            <i class="hgi-stroke hgi-arrow-left-01 w-5 h-5"></i>
+            Go Back
+        </a>
+    </div>
+</div>
+{% endblock %}

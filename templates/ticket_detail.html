@@ -4,7 +4,7 @@
 <div class="space-y-6">
     <div class="flex items-center gap-3 mb-8">
         <a href="{{ url_for('dashboard') }}" class="p-2 bg-white rounded-xl shadow-sm border border-gray-100 text-gray-500 hover:text-blue-600 transition-colors">
-            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            <i class="hgi-stroke hgi-arrow-left-01 w-5 h-5"></i>
         </a>
         <h1 class="text-3xl font-bold tracking-tight text-gray-900">Ticket Details</h1>
     </div>
@@ -21,7 +21,7 @@
                         <h1 class="text-3xl font-bold tracking-tight text-gray-900 mt-2">{{ ticket.title }}</h1>
                     </div>
                     <div class="flex items-center gap-2 text-sm text-gray-500 font-medium">
-                        <i data-lucide="clock" class="w-4 h-4"></i>
+                        <i class="hgi-stroke hgi-clock-01 w-4 h-4"></i>
                         {{ ticket.createdAt.strftime('%b %d, %Y %I:%M %p') }}
                     </div>
                 </div>
@@ -32,7 +32,7 @@
 
                 <div class="pt-6 border-t border-gray-100">
                     <h3 class="text-lg font-bold mb-6 flex items-center gap-2 text-gray-900">
-                        <i data-lucide="message-square" class="w-5 h-5 text-blue-600"></i> Discussion
+                        <i class="hgi-stroke hgi-message-multiple-01 w-5 h-5 text-blue-600"></i> Discussion
                     </h3>
                     
                     <div class="space-y-4 mb-6">
@@ -53,7 +53,7 @@
                         <input type="hidden" name="action_type" value="comment">
                         <textarea name="content" placeholder="Add a comment..." required rows="2" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm font-medium resize-none"></textarea>
                         <button type="submit" class="rounded-xl bg-blue-600 hover:bg-blue-700 px-6 text-white transition-colors">
-                            <i data-lucide="send" class="w-5 h-5"></i>
+                            <i class="hgi-stroke hgi-sent-01 w-5 h-5"></i>
                         </button>
                     </form>
                 </div>
@@ -75,7 +75,7 @@
                             <option value="RESOLVED" {% if ticket.status == 'RESOLVED' %}selected{% endif %}>Resolved</option>
                             <option value="CLOSED" {% if ticket.status == 'CLOSED' %}selected{% endif %}>Closed</option>
                         </select>
-                        <button type="submit" class="bg-blue-600 text-white rounded-xl px-4 hover:bg-blue-700"><i data-lucide="check" class="w-4 h-4"></i></button>
+                        <button type="submit" class="bg-blue-600 text-white rounded-xl px-4 hover:bg-blue-700"><i class="hgi-stroke hgi-tick-01 w-4 h-4"></i></button>
                     </form>
                 </div>
                 {% endif %}
@@ -91,7 +91,18 @@
                             <option value="{{ tech.id }}" {% if ticket.assignedTo == tech.id %}selected{% endif %}>{{ tech.displayName }}</option>
                             {% endfor %}
                         </select>
-                        <button type="submit" class="bg-blue-600 text-white rounded-xl px-4 hover:bg-blue-700"><i data-lucide="check" class="w-4 h-4"></i></button>
+                        <button type="submit" class="bg-blue-600 text-white rounded-xl px-4 hover:bg-blue-700"><i class="hgi-stroke hgi-tick-01 w-4 h-4"></i></button>
+                    </form>
+                </div>
+                {% elif current_user.role in ['TECHNICIAN', 'INTERN'] and not ticket.assignedTo %}
+                <div class="space-y-2 pt-4 border-t border-gray-100">
+                    <label class="text-xs font-bold uppercase tracking-wider text-gray-400">Action Required</label>
+                    <form method="POST" action="{{ url_for('ticket_action', ticket_id=ticket.id) }}">
+                        <input type="hidden" name="action_type" value="assign">
+                        <button type="submit" class="w-full bg-blue-600 text-white rounded-xl py-3 px-4 font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
+                            <i class="hgi-stroke hgi-user-add-01 w-4 h-4"></i>
+                            Assign to Me
+                        </button>
                     </form>
                 </div>
                 {% endif %}
@@ -118,7 +129,7 @@
 
             <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
                 <h3 class="text-sm font-bold mb-6 flex items-center gap-2 text-gray-400 uppercase tracking-wider">
-                    <i data-lucide="history" class="w-4 h-4"></i> Activity Log
+                    <i class="hgi-stroke hgi-history-period w-4 h-4"></i> Activity Log
                 </h3>
                 <div class="space-y-6 relative before:absolute before:left-2 before:top-2 before:bottom-2 before:w-px before:bg-gray-100 max-h-[400px] overflow-y-auto">
                     {% for log in ticket.activities %}

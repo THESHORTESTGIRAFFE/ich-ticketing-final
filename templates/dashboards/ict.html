@@ -12,7 +12,7 @@
     <div class="bg-white rounded-3xl border border-orange-100 shadow-sm shadow-orange-50 overflow-hidden mt-8">
         <div class="p-6 border-b border-orange-50 flex justify-between items-center bg-orange-50/30">
             <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <i data-lucide="alert-circle" class="w-5 h-5 text-orange-500"></i> Unassigned Tickets
+                <i class="hgi-stroke hgi-alert-circle w-5 h-5 text-orange-500"></i> Unassigned Tickets
             </h2>
         </div>
         <div class="overflow-x-auto px-6 pb-6 pt-4">
@@ -53,10 +53,10 @@
                                     {% endfor %}
                                 </select>
                                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-1.5 transition-colors">
-                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                    <i class="hgi-stroke hgi-tick-01 w-4 h-4"></i>
                                 </button>
                                 <a href="{{ url_for('view_ticket', ticket_id=ticket.id) }}" class="text-gray-400 hover:text-blue-600 p-1.5">
-                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                    <i class="hgi-stroke hgi-view w-4 h-4"></i>
                                 </a>
                             </form>
                         </td>
