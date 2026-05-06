@@ -122,6 +122,7 @@
                     <th class="px-6 py-4"><i class="hgi-stroke hgi-plus-naught h-4 w-4"></i></th>
                     <th class="px-6 py-4">Fault / Ticket</th>
                     <th class="px-6 py-4">Assigned To</th>
+                    <th class="px-6 py-4">Office</th>
                     <th class="px-6 py-4">Status</th>
                     <th class="px-6 py-4 text-right">Time to Resolve</th>
                 </tr>
@@ -135,6 +136,7 @@
                         <span class="block text-xs text-gray-400 mt-0.5">{{ item.ticket.createdAt.strftime('%d %b %Y') }}</span>
                     </td>
                     <td class="px-6 py-3 text-sm text-gray-700 font-medium">{{ item.ticket.assignee.displayName }}</td>
+                    <td class="px-6 py-3 text-sm text-gray-700 font-medium">{{ item.ticket.office.name }}</td>
                     <td class="px-6 py-3">
                         {% if item.ticket.status in ['RESOLVED', 'CLOSED'] %}
                             <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">{{ item.ticket.status }}</span>
@@ -150,7 +152,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="5" class="px-6 py-12 text-center text-gray-400">No tickets found for the selected period.</td>
+                    <td colspan="6" class="px-6 py-12 text-center text-gray-400">No tickets found for the selected period.</td>
                 </tr>
                 {% endfor %}
             </tbody>
