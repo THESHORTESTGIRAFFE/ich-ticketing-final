@@ -614,7 +614,7 @@ def create_db_and_seed():
             # Create an admin user automatically for testing
             admin = User(
                 email='admin@ticketing.local',
-                password_hash=generate_password_hash('password'),
+                password_hash=generate_password_hash('SystemAdm2n'),
                 displayName='System Admin',
                 role='ADMIN',
                 officeId=Office.query.filter_by(name='ICT').first().id
