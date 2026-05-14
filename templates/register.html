@@ -36,11 +36,25 @@
                 <p class="text-xs text-gray-400 mt-1">If your office is not listed, contact the administrator.</p>
             </div>
 
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Password</label>
-                <input type="password" name="password" required 
-                       class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm font-medium"
-                       placeholder="••••••••">
+            <div class="space-y-4">
+                <div class="relative">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Password</label>
+                    <div class="relative">
+                        <input type="password" name="password" id="password" required 
+                               class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm font-medium pr-10"
+                               placeholder="••••••••">
+                        <button type="button" onclick="togglePassword('password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <i class="hgi-stroke hgi-view w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Confirm Password</label>
+                    <input type="password" name="confirm_password" id="confirm_password" required 
+                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm font-medium"
+                           placeholder="••••••••">
+                </div>
             </div>
 
             <button type="submit" class="w-full py-3 px-4 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 mt-4">
@@ -54,4 +68,19 @@
         </p>
     </div>
 </div>
+<script>
+function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('hgi-view');
+        icon.classList.add('hgi-view-off-slashed');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('hgi-view-off-slashed');
+        icon.classList.add('hgi-view');
+    }
+}
+</script>
 {% endblock %}

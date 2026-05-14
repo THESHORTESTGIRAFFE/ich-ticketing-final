@@ -33,9 +33,12 @@
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <i class="hgi-stroke hgi-lock-password h-5 w-5 text-gray-400"></i>
                     </div>
-                    <input type="password" name="password" required
-                           class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm font-medium"
+                    <input type="password" name="password" id="password" required
+                           class="w-full pl-10 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm font-medium"
                            placeholder="••••••••">
+                    <button type="button" onclick="togglePassword('password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        <i class="hgi-stroke hgi-view w-5 h-5"></i>
+                    </button>
                 </div>
             </div>
 
@@ -51,4 +54,19 @@
         </p>
     </div>
 </div>
+<script>
+function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('hgi-view');
+        icon.classList.add('hgi-view-off-slashed');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('hgi-view-off-slashed');
+        icon.classList.add('hgi-view');
+    }
+}
+</script>
 {% endblock %}

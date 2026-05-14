@@ -163,8 +163,13 @@
             </div>
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Initial Password</label>
-                <input type="password" name="new_password" required placeholder="Min 6 characters"
-                       class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                <div class="relative">
+                    <input type="password" name="new_password" id="new_password_add" required placeholder="Min 6 characters"
+                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none pr-10">
+                    <button type="button" onclick="togglePassword('new_password_add', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        <i class="hgi-stroke hgi-view w-4 h-4"></i>
+                    </button>
+                </div>
             </div>
             <div class="flex gap-3 pt-2">
                 <button type="button" onclick="document.getElementById('modal-add').classList.add('hidden')"
@@ -191,8 +196,13 @@
             <input type="hidden" name="user_id" id="reset-user-id">
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">New Password</label>
-                <input type="password" name="new_password" required placeholder="Min 6 characters"
-                       class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                <div class="relative">
+                    <input type="password" name="new_password" id="new_password_reset" required placeholder="Min 6 characters"
+                           class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none pr-10">
+                    <button type="button" onclick="togglePassword('new_password_reset', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        <i class="hgi-stroke hgi-view w-4 h-4"></i>
+                    </button>
+                </div>
             </div>
             <div class="flex gap-3 pt-2">
                 <button type="button" onclick="document.getElementById('modal-reset').classList.add('hidden')"
@@ -209,6 +219,20 @@ function openReset(userId, userName) {
     document.getElementById('reset-user-id').value = userId;
     document.getElementById('reset-name').textContent = userName;
     document.getElementById('modal-reset').classList.remove('hidden');
+}
+
+function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('hgi-view');
+        icon.classList.add('hgi-view-off-slashed');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('hgi-view-off-slashed');
+        icon.classList.add('hgi-view');
+    }
 }
 </script>
 {% endblock %}

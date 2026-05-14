@@ -136,6 +136,7 @@ def register():
     if request.method == 'POST':
         email = sanitize(request.form.get('email', ''), 255).lower()
         password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
         display_name = sanitize(request.form.get('displayName', ''), 100)
         office_id = request.form.get('officeId', '').strip()
 
@@ -147,6 +148,8 @@ def register():
             errors.append('Full name must be at least 2 characters.')
         if len(password) < 8:
             errors.append('Password must be at least 8 characters.')
+        if password != confirm_password:
+            errors.append('Passwords do not match.')
         if not re.search(r'[A-Z]', password):
             errors.append('Password must contain at least one uppercase letter.')
         if not re.search(r'\d', password):
