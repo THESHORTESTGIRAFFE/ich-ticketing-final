@@ -22,7 +22,7 @@ class Office(db.Model):
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)  # Changed 'uid' to 'id' for Flask-Login compatibility
-    email = db.Column(db.String(255), unique=True, nullable=False)
+    username = db.Column(db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     displayName = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(50), nullable=False, default='STAFF') # ADMIN, ICT_OFFICER, TECHNICIAN, INTERN, STAFF

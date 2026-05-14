@@ -33,7 +33,7 @@ with app.app_context():
     # Create clean admin
     ict_office = Office.query.filter_by(name='ICT').first()
     admin = User(
-        email=ADMIN_EMAIL,
+        username='admin',
         password_hash=generate_password_hash(ADMIN_PASSWORD),
         displayName=ADMIN_NAME,
         role='ADMIN',
@@ -43,7 +43,7 @@ with app.app_context():
     db.session.commit()
 
     print(f"\n  ✓ Admin account created.")
-    print(f"    Email   : {ADMIN_EMAIL}")
+    print(f"    Username: admin")
     print(f"    Password: {ADMIN_PASSWORD}")
     print(f"    Role    : ADMIN\n")
     print("Database reset complete. The system is ready for the pilot.")

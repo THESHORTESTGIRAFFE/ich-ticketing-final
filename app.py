@@ -86,7 +86,7 @@ def login():
         return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
-        email = sanitize(request.form.get('email', ''), 255).lower()
+        username = sanitize(request.form.get('username', ''), 50).strip().lower()
         password = request.form.get('password', '')
 
         # ── Brute-force protection ────────────────────────────────────────────
@@ -97,7 +97,7 @@ def login():
             flash(f'Too many failed attempts. Try again in {minutes_left} minute(s).', 'danger')
             return render_template('login.html')
 
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(username=username).first()
         if user and check_password_hash(user.password_hash, password):
             # ── Reset failed counter on success ──
             session.pop('login_attempts', None)
@@ -134,7 +134,7 @@ def register():
         return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
-        email = sanitize(request.form.get('email', ''), 255).lower()
+        username = sanitize(request.form.get('username', ''), 50).strip().lower()
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
         display_name = sanitize(request.form.get('displayName', ''), 100)
@@ -142,8 +142,8 @@ def register():
 
         # ── Server-side validation ────────────────────────────────────────────
         errors = []
-        if not re.match(r'^[\w.+-]+@[\w-]+\.[\w.]+$', email):
-            errors.append('Please enter a valid email address.')
+        if not re.match(r'^\w+$', username):
+            errors.append('Username can only contain letters, numbers, and underscores.')
         if len(display_name) < 2:
             errors.append('Full name must be at least 2 characters.')
         if len(password) < 8:
@@ -156,8 +156,8 @@ def register():
             errors.append('Password must contain at least one number.')
         if not office_id or not Office.query.get(office_id):
             errors.append('Please select a valid office from the list.')
-        if User.query.filter_by(email=email).first():
-            errors.append('An account with that email already exists.')
+        if User.query.filter_by(username=username).first():
+            errors.append('That username is already taken.')
 
         if errors:
             for e in errors:
@@ -461,17 +461,17 @@ def admin_users():
                 flash('Password must be at least 6 characters.', 'danger')
 
         elif action == 'add_user':
-            email = request.form.get('new_email')
+            username = request.form.get('new_username', '').strip().lower()
             name = request.form.get('new_name')
             role = request.form.get('new_role', 'STAFF')
             office_id = request.form.get('new_office_id')
             password = request.form.get('new_password')
-            if email and name and password:
-                if User.query.filter_by(email=email).first():
-                    flash('Email already exists.', 'danger')
+            if username and name and password:
+                if User.query.filter_by(username=username).first():
+                    flash('Username already exists.', 'danger')
                 else:
                     new_user = User(
-                        email=email,
+                        username=username,
                         displayName=name,
                         role=role,
                         officeId=office_id or None,
@@ -643,7 +643,7 @@ def create_db_and_seed():
             
             # Create an admin user automatically for testing
             admin = User(
-                email='admin@ticketing.local',
+                username='admin',
                 password_hash=generate_password_hash('SystemAdm2n'),
                 displayName='System Admin',
                 role='ADMIN',
