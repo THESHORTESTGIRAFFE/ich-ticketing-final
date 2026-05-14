@@ -10,7 +10,7 @@
     </div>
 
     <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-        <form method="POST" action="{{ url_for('new_ticket') }}" class="space-y-6">
+        <form method="POST" action="{{ url_for('new_ticket') }}" class="space-y-6" onsubmit="const btn = this.querySelector('button[type=submit]'); btn.disabled=true; btn.innerHTML='Processing...';">
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Issue Title</label>
                 <input type="text" name="title" required 

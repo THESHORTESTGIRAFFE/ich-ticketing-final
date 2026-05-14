@@ -318,8 +318,10 @@ def new_ticket():
         # custom ticket ID generation
         office = Office.query.get(current_user.officeId)
         prefix = office.name[:3].lower() if office else "sys"
-        dt_str = datetime.now(timezone.utc).strftime('%d%m%y%H%M')
-        ticket_id = f"{prefix}{dt_str}"
+        dt_str = datetime.now(timezone.utc).strftime('%y%m%d%H%M')
+        # Add 2 random characters to ensure uniqueness within the same minute
+        rand = ''.join(random.choices(string.ascii_lowercase + string.digits, k=2))
+        ticket_id = f"{prefix}{dt_str}{rand}"
         
         ticket = Ticket(
             id=ticket_id,
