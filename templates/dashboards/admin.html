@@ -7,9 +7,14 @@
             <h1 class="text-3xl font-bold tracking-tight text-gray-900">Admin Dashboard</h1>
             <p class="text-gray-500 font-medium">System-wide overview and analytics</p>
         </div>
-        <a href="{{ url_for('new_ticket') }}" class="py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow shadow-blue-200 transition-all flex items-center gap-2 text-sm">
-            <i class="hgi-stroke hgi-plus-naught w-4 h-4"></i> New Ticket
-        </a>
+        <div class="flex gap-3">
+            <a href="{{ url_for('export_database') }}" class="py-2.5 px-5 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl shadow-sm hover:bg-gray-50 transition-all flex items-center gap-2 text-sm">
+                <i class="hgi-stroke hgi-database-export w-4 h-4"></i> Export DB
+            </a>
+            <a href="{{ url_for('new_ticket') }}" class="py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow shadow-blue-200 transition-all flex items-center gap-2 text-sm">
+                <i class="hgi-stroke hgi-plus-naught w-4 h-4"></i> New Ticket
+            </a>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">

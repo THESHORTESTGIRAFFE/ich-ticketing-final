@@ -1,6 +1,6 @@
 import os
 import re
-from flask import Flask, render_template, redirect, url_for, flash, request, abort, session
+from flask import Flask, render_template, redirect, url_for, flash, request, abort, session, send_file
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta, timezone
@@ -577,6 +577,31 @@ def admin_report():
                            now=datetime.now(timezone.utc),
                            today=datetime.now(timezone.utc).strftime('%Y-%m-%d'),
                            min_date=(datetime.now(timezone.utc) - timedelta(days=365)).strftime('%Y-%m-%d'))
+
+@app.route('/admin/export-database')
+@login_required
+def export_database():
+    if current_user.role != 'ADMIN':
+        abort(403)
+    
+    db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    if not db_uri.startswith('sqlite'):
+        flash('Database export is only supported for SQLite databases.', 'warning')
+        return redirect(url_for('dashboard'))
+        
+    db_path = db_uri.replace('sqlite:///', '')
+    if not os.path.isabs(db_path):
+        instance_db_path = os.path.join(app.instance_path, db_path)
+        if os.path.exists(instance_db_path):
+            db_path = instance_db_path
+        else:
+            db_path = os.path.join(app.root_path, db_path)
+            
+    if os.path.exists(db_path):
+        return send_file(db_path, as_attachment=True, download_name=f'ich_ticketing_backup_{datetime.now().strftime("%Y%m%d_%H%M%S")}.db')
+    else:
+        flash('Database file not found.', 'error')
+        return redirect(url_for('dashboard'))
 
 # ── Error Handlers ───────────────────────────────────────────────────────────
 @app.errorhandler(404)
