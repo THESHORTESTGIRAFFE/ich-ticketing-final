@@ -21,6 +21,13 @@
         }
         .xs\:block { display: none; }
         @media (min-width: 475px) { .xs\:block { display: block; } }
+        @keyframes slideIn {
+            from { transform: translateY(1.5rem); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .toast-animate {
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col antialiased">
@@ -200,7 +207,102 @@
                 "lengthChange": true,
                 "order": [] // Disable default sort to use server-side order
             });
+
+            // --- Real-time Intranet Notification Polling ---
+            {% if current_user.is_authenticated %}
+            let lastCheckTime = null;
+
+            function showToast(notification) {
+                const container = document.getElementById('toast-container');
+                if (!container) return;
+
+                // Determine styling and icons based on notification type
+                let iconClass = 'hgi-notification-01';
+                let bgClass = 'bg-blue-50 text-blue-600';
+                if (notification.type === 'new_ticket') {
+                    iconClass = 'hgi-ticket-01';
+                    bgClass = 'bg-blue-50 text-blue-600';
+                } else if (notification.type === 'new_comment') {
+                    iconClass = 'hgi-comment-01';
+                    bgClass = 'bg-indigo-50 text-indigo-600';
+                } else if (notification.type === 'status_change') {
+                    iconClass = 'hgi-activity-01';
+                    bgClass = 'bg-green-50 text-green-600';
+                }
+
+                const toast = document.createElement('div');
+                toast.className = 'toast-animate pointer-events-auto bg-white/95 backdrop-blur-md border border-gray-100 shadow-xl rounded-2xl p-4 flex gap-3 max-w-sm w-full transition-all duration-300 hover:scale-[1.02]';
+                toast.innerHTML = `
+                    <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl ${bgClass}">
+                        <i class="hgi-stroke ${iconClass} w-5 h-5"></i>
+                    </div>
+                    <div class="flex-grow">
+                        <h4 class="text-sm font-bold text-gray-900">${notification.title}</h4>
+                        <p class="text-xs text-gray-500 mt-0.5">${notification.message}</p>
+                        <a href="${notification.url}" class="text-xs font-semibold text-blue-600 hover:text-blue-700 mt-2 inline-block">View details &rarr;</a>
+                    </div>
+                    <button class="flex-shrink-0 text-gray-400 hover:text-gray-600 self-start" onclick="this.parentElement.remove()">
+                        <i class="hgi-stroke hgi-cancel-01 w-4 h-4"></i>
+                    </button>
+                `;
+
+                container.appendChild(toast);
+
+                // Auto-remove toast after 10 seconds
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(-10px)';
+                    setTimeout(() => toast.remove(), 300);
+                }, 10000);
+
+                // Try System Push Notification if permission granted
+                if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                    try {
+                        new Notification(notification.title, {
+                            body: notification.message,
+                            icon: "{{ url_for('static', filename='logo.png') }}"
+                        });
+                    } catch (e) {
+                        console.error('System notification error:', e);
+                    }
+                }
+            }
+
+            function checkNotifications() {
+                const params = lastCheckTime ? { since: lastCheckTime } : {};
+                $.ajax({
+                    url: '/api/notifications',
+                    data: params,
+                    dataType: 'json',
+                    success: function(response) {
+                        lastCheckTime = response.current_time;
+                        if (response.notifications && response.notifications.length > 0) {
+                            response.notifications.forEach(showToast);
+                        }
+                    },
+                    error: function(err) {
+                        console.error('Notification check failed:', err);
+                    }
+                });
+            }
+
+            // Request permission for system notifications on first click
+            if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+                const requestPerm = () => {
+                    Notification.requestPermission();
+                    document.removeEventListener('click', requestPerm);
+                };
+                document.addEventListener('click', requestPerm);
+            }
+
+            // Initial call to set timestamp, then poll every 15 seconds
+            checkNotifications();
+            setInterval(checkNotifications, 15000);
+            {% endif %}
         });
     </script>
+    
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-[100] flex flex-col gap-3 max-w-sm w-full pointer-events-none"></div>
 </body>
 </html>

@@ -1,6 +1,6 @@
 import os
 import re
-from flask import Flask, render_template, redirect, url_for, flash, request, abort, session, send_file
+from flask import Flask, render_template, redirect, url_for, flash, request, abort, session, send_file, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta, timezone
@@ -607,6 +607,84 @@ def export_database():
     else:
         flash('Database file not found.', 'error')
         return redirect(url_for('dashboard'))
+
+@app.route('/api/notifications')
+@login_required
+def get_notifications():
+    since_val = request.args.get('since')
+    now_ts = datetime.now(timezone.utc).timestamp()
+    
+    if not since_val:
+        return jsonify({
+            'current_time': now_ts,
+            'notifications': []
+        })
+    
+    try:
+        since_dt = datetime.fromtimestamp(float(since_val), tz=timezone.utc)
+    except (ValueError, TypeError):
+        return jsonify({
+            'current_time': now_ts,
+            'notifications': []
+        })
+
+    notifications = []
+
+    # 1. New open pool tickets for admins and technicians
+    if current_user.role in ['ADMIN', 'ICT_OFFICER', 'TECHNICIAN', 'INTERN']:
+        new_tickets = Ticket.query.filter(
+            Ticket.createdAt > since_dt,
+            Ticket.status == 'OPEN'
+        ).all()
+        for ticket in new_tickets:
+            notifications.append({
+                'id': ticket.id,
+                'type': 'new_ticket',
+                'title': 'New Ticket Created',
+                'message': f"Ticket {ticket.id} has been opened: '{ticket.title}'",
+                'url': url_for('view_ticket', ticket_id=ticket.id)
+            })
+
+    # 2. Status updates or new comments on staff tickets
+    my_tickets = Ticket.query.filter_by(createdBy=current_user.id).all()
+    my_ticket_ids = [t.id for t in my_tickets]
+
+    if my_ticket_ids:
+        # Check for new comments from other users
+        new_comments = Comment.query.filter(
+            Comment.ticketId.in_(my_ticket_ids),
+            Comment.createdAt > since_dt,
+            Comment.authorId != current_user.id
+        ).all()
+        for comment in new_comments:
+            notifications.append({
+                'id': f"comment-{comment.id}",
+                'type': 'new_comment',
+                'title': 'New Comment on Your Ticket',
+                'message': f"New reply on ticket {comment.ticketId}",
+                'url': url_for('view_ticket', ticket_id=comment.ticketId)
+            })
+
+        # Check for status changes (via ActivityLog)
+        new_status_activities = ActivityLog.query.filter(
+            ActivityLog.ticketId.in_(my_ticket_ids),
+            ActivityLog.createdAt > since_dt,
+            ActivityLog.userId != current_user.id,
+            ActivityLog.action.in_(['Assigned Ticket', 'Status Update', 'Resolved Ticket', 'Closed Ticket'])
+        ).all()
+        for activity in new_status_activities:
+            notifications.append({
+                'id': f"activity-{activity.id}",
+                'type': 'status_change',
+                'title': 'Ticket Update',
+                'message': f"Ticket {activity.ticketId}: {activity.action} ({activity.details or ''})",
+                'url': url_for('view_ticket', ticket_id=activity.ticketId)
+            })
+
+    return jsonify({
+        'current_time': now_ts,
+        'notifications': notifications
+    })
 
 # ── Error Handlers ───────────────────────────────────────────────────────────
 @app.errorhandler(404)
