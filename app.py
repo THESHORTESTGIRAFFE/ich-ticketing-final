@@ -124,7 +124,7 @@ def login():
                 session.pop('login_attempts', None)
                 flash('Account locked after 5 failed attempts. Try again in 15 minutes.', 'danger')
             else:
-                flash(f'Invalid email or password. {remaining} attempt(s) remaining before lockout.', 'danger')
+                flash(f'Invalid username or password. {remaining} attempt(s) remaining before lockout.', 'danger')
 
     return render_template('login.html')
 
@@ -165,7 +165,7 @@ def register():
             return redirect(url_for('register'))
 
         new_user = User(
-            email=email,
+            username=username,
             password_hash=generate_password_hash(password),
             displayName=display_name,
             officeId=office_id,
