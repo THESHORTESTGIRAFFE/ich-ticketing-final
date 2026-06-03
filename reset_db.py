@@ -11,15 +11,11 @@ ADMIN_NAME     = 'System Admin'
 ADMIN_PASSWORD = 'SystemAdm2n'
 
 with app.app_context():
-    print("Clearing existing data...")
-
-    # Delete in dependency order to avoid FK violations
-    ActivityLog.query.delete()
-    Comment.query.delete()
-    Ticket.query.delete()
-    User.query.delete()
-    db.session.commit()
-    print("  ✓ All tickets, comments, activity logs, and users removed.")
+    print("Dropping all tables to reset schema...")
+    db.drop_all()
+    print("Recreating database tables...")
+    db.create_all()
+    print("  ✓ Database tables recreated successfully.")
 
     # Keep offices or recreate them if empty
     if Office.query.count() == 0:
