@@ -16,7 +16,7 @@ from models import db, User, Office, Ticket, Comment, ActivityLog, Asset, AssetA
 # Load environment variables from .env file
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, instance_relative_config=True)
 
 # ── Extension Initialization ──
 migrate = Migrate()

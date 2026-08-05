@@ -13,6 +13,7 @@ ADMIN_PASSWORD = 'SystemAdm2n'
 app = create_app()
 
 with app.app_context():
+    print(f"Using database: {app.config['SQLALCHEMY_DATABASE_URI']}")
     print("Dropping all tables to reset schema...")
     db.drop_all()
     print("Recreating database tables...")
