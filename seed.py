@@ -1,9 +1,11 @@
-from app import app, db
+from app import create_app, db
 from models import User, Office, Ticket, Comment, ActivityLog
 from werkzeug.security import generate_password_hash
 import argparse
 import random
 from datetime import datetime, timedelta, timezone
+
+app = create_app()
 
 ADJECTIVES = ['Broken', 'Frozen', 'Slow', 'Missing', 'Urgent', 'Confusing', 'Outdated', 'Loud', 'Sparking', 'Unresponsive']
 NOUNS = ['Monitor', 'Printer', 'Software', 'Network', 'Mouse', 'Keyboard', 'Email', 'Server', 'Application', 'Router']

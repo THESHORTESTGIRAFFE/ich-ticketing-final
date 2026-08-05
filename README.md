@@ -7,6 +7,7 @@
 ## Features
 
 - Role-based access control (Admin, ICT Officer, Technician, Intern, Staff)
+- Asset Register (CRUD for Admins, View/Add for others)
 - Ticket creation, assignment, status tracking, and comments
 - Admin dashboards with live charts (status, priority, office breakdown, 7-day trend)
 - Intern/Technician performance reporting with date filtering
@@ -14,8 +15,14 @@
 - User management — add, suspend, deactivate, reset passwords
 - Brute-force login protection, session security, input sanitization
 
-## Quick Start
+## Getting Started
 
+### For Windows Users
+1. Download the repository.
+2. Locate `run_windows.bat` in the project root.
+3. Double-click `run_windows.bat`. This will automatically set up a virtual environment, install dependencies, and launch the production server.
+
+### For Linux/macOS Users
 ```bash
 # 1. Create and activate a virtual environment
 python3 -m venv venv
@@ -31,31 +38,31 @@ cp .env.example .env
 # 4. Initialize database migrations
 flask db upgrade
 
-# 5. Run the application
-python app.py
+# 5. Run the production server
+python run_production.py
 ```
 
-The app will be available at `http://localhost:5000`
+The app will be available at `http://localhost:8080` (or the next available port).
 
 **Default admin credentials:**
-- Email: `admin@ticketing.local`
-- Password: `password`
+- Username: `admin`
+- Password: `SystemAdm2n`
 
 > ⚠️ Change the admin password immediately after first login.
 
 ## Roles
 
-| Role | Can Create Tickets | Can Assign | Can Manage Users | Dashboard |
+| Role | Create Tickets | Assign | Manage Users | Asset CRUD |
 |---|---|---|---|---|
-| ADMIN | ✅ | ✅ | ✅ | Charts + all data |
-| ICT_OFFICER | ❌ | ✅ | ❌ | Unassigned ticket queue |
-| TECHNICIAN | ❌ | ❌ | ❌ | Assigned tickets |
-| INTERN | ❌ | ❌ | ❌ | Assigned tickets |
-| STAFF | ✅ | ❌ | ❌ | Own tickets only |
+| ADMIN | ✅ | ✅ | ✅ | ✅ |
+| ICT_OFFICER | ❌ | ✅ | ❌ | ❌ |
+| TECHNICIAN | ❌ | ❌ | ❌ | ❌ |
+| INTERN | ❌ | ❌ | ❌ | ❌ |
+| STAFF | ✅ | ❌ | ❌ | ❌ |
 
 ## Tech Stack
 
-- **Backend**: Python 3, Flask, Flask-Login, SQLAlchemy, Flask-Migrate
+- **Backend**: Python 3, Flask, Flask-Login, SQLAlchemy, Flask-Migrate, Waitress (Production Server)
 - **Database**: SQLite / PostgreSQL / MySQL
 - **Frontend**: Jinja2, Tailwind CSS (CDN), Chart.js, Hugeicons
 - **Auth**: Werkzeug password hashing (scrypt)
@@ -63,39 +70,13 @@ The app will be available at `http://localhost:5000`
 ## Project Structure
 
 ```
-├── app.py              # Main application — all routes and business logic
-├── models.py           # Database models (User, Office, Ticket, Comment, ActivityLog)
-├── seed.py             # Development data seeder (50 dummy tickets)
+├── app.py              # Main application factory & routes
+├── models.py           # Database models
+├── seed.py             # Development data seeder
+├── run_production.py   # Production WSGI runner (Waitress)
+├── run_windows.bat     # Windows production launcher
 ├── requirements.txt    # Python dependencies
-├── static/             # Logo images
-├── templates/
-│   ├── layout.html         # Base template (navbar, footer)
-│   ├── login.html          # Login page
-│   ├── register.html       # Registration page
-│   ├── ticket_form.html    # New ticket form
-│   ├── ticket_detail.html  # View/comment/update ticket
-│   ├── admin_users.html    # User management
-│   ├── admin_offices.html  # Office management
-│   ├── admin_tickets.html  # All tickets table
-│   ├── admin_report.html   # Performance report (printable)
-│   └── dashboards/
-│       ├── admin.html
-│       ├── ict.html
-│       ├── technician.html
-│       └── staff.html
+├── static/             # Images
+├── templates/          # Jinja2 templates
+└── migrations/         # Alembic database migrations
 ```
-
-## Production Deployment
-
-```bash
-# Generate a secure secret key
-python -c "import secrets; print(secrets.token_hex(32))"
-
-# Setup production database
-flask db upgrade
-
-# Run with gunicorn
-gunicorn -c gunicorn_config.py app:app
-```
-
-See [docs/SECURITY.md](docs/SECURITY.md) for the full security checklist.

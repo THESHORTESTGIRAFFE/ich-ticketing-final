@@ -11,32 +11,37 @@ import logging
 from logging.handlers import RotatingFileHandler
 from dotenv import load_dotenv
 from flask_migrate import Migrate
-from models import db, User, Office, Ticket, Comment, ActivityLog
+from models import db, User, Office, Ticket, Comment, ActivityLog, Asset, AssetActivityLog
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
 
-# ── Security config ──────────────────────────────────────────────────────────
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-must-be-changed-in-prod')
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=int(os.environ.get('PERMANENT_SESSION_LIFETIME', 28800)))
-app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# ── Database ─────────────────────────────────────────────────────────────────
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///ich_ticketing.db')
-
-db.init_app(app)
-migrate = Migrate(app, db)
-
+# ── Extension Initialization ──
+migrate = Migrate()
 login_manager = LoginManager()
-login_manager.login_view = 'login'
-login_manager.login_message = 'Please log in to access this page.'
-login_manager.login_message_category = 'warning'
-login_manager.init_app(app)
+
+def create_app():
+    # Configure app settings
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-must-be-changed-in-prod')
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=int(os.environ.get('PERMANENT_SESSION_LIFETIME', 28800)))
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///ich_ticketing.db')
+
+    # Initialize extensions
+    db.init_app(app)
+    migrate.init_app(app, db)
+    
+    login_manager.login_view = 'login'
+    login_manager.login_message = 'Please log in to access this page.'
+    login_manager.login_message_category = 'warning'
+    login_manager.init_app(app)
+    
+    return app
 
 # ── Logging Setup ─────────────────────────────────────────────────────────────
 if not app.debug:
@@ -686,7 +691,104 @@ def get_notifications():
         'notifications': notifications
     })
 
-# ── Error Handlers ───────────────────────────────────────────────────────────
+# ── Asset Management Routes ──────────────────────────────────────────────────
+@app.route('/assets')
+@login_required
+def assets():
+    if current_user.role not in ['ADMIN', 'ICT_OFFICER', 'TECHNICIAN', 'INTERN']:
+        abort(403)
+
+    # Active assets only
+    all_assets = Asset.query.filter_by(isDeleted=False).order_by(Asset.createdAt.desc()).all()
+    offices = Office.query.all()
+    users = User.query.all()
+
+    return render_template('assets.html', assets=all_assets, offices=offices, users=users)
+
+@app.route('/assets/add', methods=['POST'])
+@login_required
+def add_asset():
+    if current_user.role not in ['ADMIN', 'ICT_OFFICER', 'TECHNICIAN', 'INTERN']:
+        abort(403)
+
+    name = sanitize(request.form.get('name', ''), 255)
+    serial_number = sanitize(request.form.get('serialNumber', ''), 255)
+    type_ = sanitize(request.form.get('type', ''), 100)
+    office_id = request.form.get('officeId')
+    assigned_to = request.form.get('assignedTo')
+
+    if not name or not serial_number or not type_:
+        flash('Name, Serial Number, and Type are required.', 'danger')
+        return redirect(url_for('assets'))
+
+    if Asset.query.filter_by(serialNumber=serial_number).first():
+        flash('An asset with this serial number already exists.', 'danger')
+        return redirect(url_for('assets'))
+
+    new_asset = Asset(
+        name=name,
+        serialNumber=serial_number,
+        type=type_,
+        officeId=office_id if office_id else None,
+        assignedTo=assigned_to if assigned_to else None,
+        createdBy=current_user.id,
+        updatedBy=current_user.id
+    )
+    db.session.add(new_asset)
+    db.session.commit()
+
+    log = AssetActivityLog(assetId=new_asset.id, assetName=new_asset.name, userId=current_user.id, action='CREATED', details=f"Created asset {name} (SN: {serial_number})")
+    db.session.add(log)
+    db.session.commit()
+
+    flash('Asset added successfully.', 'success')
+    return redirect(url_for('assets'))
+
+@app.route('/asset/<asset_id>/update', methods=['POST'])
+@login_required
+def update_asset(asset_id):
+    if current_user.role != 'ADMIN':
+        abort(403)
+
+    asset = Asset.query.get_or_404(asset_id)
+
+    asset.name = sanitize(request.form.get('name', asset.name), 255)
+    asset.type = sanitize(request.form.get('type', asset.type), 100)
+    asset.officeId = request.form.get('officeId', asset.officeId)
+    asset.assignedTo = request.form.get('assignedTo', asset.assignedTo)
+    asset.status = request.form.get('status', asset.status)
+    asset.updatedBy = current_user.id
+
+    db.session.commit()
+
+    log = AssetActivityLog(assetId=asset.id, assetName=asset.name, userId=current_user.id, action='UPDATED', details=f"Updated asset {asset.name}")
+    db.session.add(log)
+    db.session.commit()
+
+    flash('Asset updated successfully.', 'success')
+    return redirect(url_for('assets'))
+
+@app.route('/asset/<asset_id>/delete', methods=['POST'])
+@login_required
+def delete_asset(asset_id):
+    if current_user.role != 'ADMIN':
+        abort(403)
+
+    asset = Asset.query.get_or_404(asset_id)
+    asset.isDeleted = True
+    asset.updatedBy = current_user.id
+
+    db.session.commit()
+
+    log = AssetActivityLog(assetId=asset.id, assetName=asset.name, userId=current_user.id, action='DELETED', details=f"Soft-deleted asset {asset.name} (SN: {asset.serialNumber})")
+    db.session.add(log)
+    db.session.commit()
+
+    flash('Asset deleted successfully.', 'success')
+    return redirect(url_for('assets'))
+
+# ── Error Handlers ──────────────────────────────────────────────────────────
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('errors/404.html'), 404

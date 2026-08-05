@@ -2,13 +2,15 @@
 reset_db.py — Wipes all ticket/user/comment data and seeds a clean admin account.
 Run once before the pilot: python reset_db.py
 """
-from app import app
+from app import create_app
 from models import db, User, Office, Ticket, Comment, ActivityLog
 from werkzeug.security import generate_password_hash
 
 ADMIN_EMAIL    = 'admin@ticketing.local'
 ADMIN_NAME     = 'System Admin'
 ADMIN_PASSWORD = 'SystemAdm2n'
+
+app = create_app()
 
 with app.app_context():
     print("Dropping all tables to reset schema...")

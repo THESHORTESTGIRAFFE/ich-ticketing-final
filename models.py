@@ -75,3 +75,35 @@ class ActivityLog(db.Model):
 
     ticket = db.relationship('Ticket', back_populates='activities')
     user = db.relationship('User', foreign_keys=[userId])
+
+class Asset(db.Model):
+    __tablename__ = 'assets'
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    name = db.Column(db.String(255), nullable=False)
+    serialNumber = db.Column(db.String(255), unique=True, nullable=False)
+    type = db.Column(db.String(100), nullable=False) # e.g. Laptop, Printer, Network Device, Phone, etc.
+    officeId = db.Column(db.String(36), db.ForeignKey('offices.id'), nullable=True) # Location / Department
+    assignedTo = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=True) # Assigned User
+    status = db.Column(db.String(50), nullable=False, default='AVAILABLE') # AVAILABLE, ASSIGNED, UNDER_REPAIR, DISPOSED
+    createdAt = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updatedAt = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    createdBy = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    updatedBy = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    isDeleted = db.Column(db.Boolean, default=False, nullable=False) # Soft delete
+
+    office = db.relationship('Office', backref='assets')
+    assignee = db.relationship('User', foreign_keys=[assignedTo], backref='assigned_assets')
+    creator = db.relationship('User', foreign_keys=[createdBy], backref='created_assets')
+    updater = db.relationship('User', foreign_keys=[updatedBy], backref='updated_assets')
+
+class AssetActivityLog(db.Model):
+    __tablename__ = 'asset_activity_logs'
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    assetId = db.Column(db.String(36), nullable=False)
+    assetName = db.Column(db.String(255), nullable=False)
+    userId = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    action = db.Column(db.String(255), nullable=False) # CREATED, UPDATED, DELETED, ASSIGNED, UNASSIGNED, etc.
+    details = db.Column(db.Text, nullable=True)
+    createdAt = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    user = db.relationship('User', foreign_keys=[userId], backref='asset_activities')
