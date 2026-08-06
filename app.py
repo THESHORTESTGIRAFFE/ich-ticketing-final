@@ -796,6 +796,7 @@ def not_found_error(error):
 @app.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
+    flash('An internal server error occurred.', 'danger')
     return render_template('errors/500.html'), 500
 
 @app.errorhandler(403)
