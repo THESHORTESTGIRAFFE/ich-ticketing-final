@@ -80,6 +80,14 @@
                     {% for office in offices %}<option value="{{ office.id }}">{{ office.name }}</option>{% endfor %}
                 </select>
             </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Assignee</label>
+                <div class="relative">
+                    <input type="text" id="assignee-search" placeholder="Search user..." class="w-full border rounded-xl px-4 py-2">
+                    <input type="hidden" name="assignedTo" id="assignee-id">
+                    <div id="assignee-suggestions" class="absolute z-10 w-full bg-white border border-gray-200 rounded-xl mt-1 hidden max-h-40 overflow-y-auto"></div>
+                </div>
+            </div>
             <div class="flex gap-4 mt-6">
                 <button type="button" onclick="document.getElementById('add-asset-modal').classList.add('hidden')" class="flex-1 bg-gray-100 py-2 rounded-xl font-semibold">Cancel</button>
                 <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded-xl font-semibold">Add Asset</button>
@@ -134,15 +142,55 @@
 </div>
 
 <script>
-function editAsset(id, name, sn, type, office, assigned, status) {
-    document.getElementById('edit-asset-id').value = id;
-    document.getElementById('edit-name').value = name;
-    document.getElementById('edit-type').value = type;
-    document.getElementById('edit-office').value = office;
-    document.getElementById('edit-assigned').value = assigned;
-    document.getElementById('edit-status').value = status;
-    document.getElementById('edit-asset-form').action = `/asset/${id}/update`;
-    document.getElementById('edit-asset-modal').classList.remove('hidden');
-}
+    const searchInput = document.getElementById('assignee-search');
+    const hiddenIdInput = document.getElementById('assignee-id');
+    const suggestionsDiv = document.getElementById('assignee-suggestions');
+
+    searchInput.addEventListener('input', async (e) => {
+        const query = e.target.value;
+        if (query.length < 2) {
+            suggestionsDiv.classList.add('hidden');
+            hiddenIdInput.value = '';
+            return;
+        }
+
+        const response = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`);
+        const users = await response.json();
+
+        suggestionsDiv.innerHTML = '';
+        if (users.length === 0) {
+            suggestionsDiv.innerHTML = '<div class="px-4 py-2 text-gray-500">No users found</div>';
+        } else {
+            users.forEach(user => {
+                const div = document.createElement('div');
+                div.className = 'px-4 py-2 cursor-pointer hover:bg-gray-100';
+                div.textContent = user.displayName;
+                div.onclick = () => {
+                    searchInput.value = user.displayName;
+                    hiddenIdInput.value = user.id;
+                    suggestionsDiv.classList.add('hidden');
+                };
+                suggestionsDiv.appendChild(div);
+            });
+        }
+        suggestionsDiv.classList.remove('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#assignee-search') && !e.target.closest('#assignee-suggestions')) {
+            suggestionsDiv.classList.add('hidden');
+        }
+    });
+
+    function editAsset(id, name, sn, type, office, assigned, status) {
+        document.getElementById('edit-asset-id').value = id;
+        document.getElementById('edit-name').value = name;
+        document.getElementById('edit-type').value = type;
+        document.getElementById('edit-office').value = office;
+        document.getElementById('edit-assigned').value = assigned;
+        document.getElementById('edit-status').value = status;
+        document.getElementById('edit-asset-form').action = `/asset/${id}/update`;
+        document.getElementById('edit-asset-modal').classList.remove('hidden');
+    }
 </script>
 {% endblock %}

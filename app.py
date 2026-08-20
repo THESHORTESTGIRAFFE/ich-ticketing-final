@@ -691,6 +691,16 @@ def get_notifications():
         'notifications': notifications
     })
 
+@app.route('/api/users/search')
+@login_required
+def search_users():
+    query = request.args.get('q', '')
+    if not query:
+        return jsonify([])
+    
+    users = User.query.filter(User.displayName.contains(query)).limit(10).all()
+    return jsonify([{'id': u.id, 'displayName': u.displayName} for u in users])
+
 # ── Asset Management Routes ──────────────────────────────────────────────────
 @app.route('/assets')
 @login_required
